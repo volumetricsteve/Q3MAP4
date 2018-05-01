@@ -1,0 +1,60 @@
+Q3MAP4 - a heavily optimized quake 3 map compiler
+
+Q3Map (c) 1999 Id Software
+Q3Map2 by Ydnar
+Q3Map3 by SiliconeMilk
+Q3Map4 by VolumetricSteve
+
+HOW TO COMPILE:
+./build-q3map4.sh
+You can also do::
+./build-q3map4.sh -static
+If it doesn't work it's between you and your god.
+a standard GNU Makefile is being put together
+
+COMPILE NOTES:
+This was built based on output ripped from the standard NetRadiant Makefile (make binaries-q3map4) with dependency checking disabled
+I've removed debugging, moved from -O to -O3 (I don't think -O3 existed when the code was released) added -march=native, which
+actually adds like 20 flags on its own, and added -pipe which may or may not speed up compilation, it certainly doesn't hurt.
+I've also reorganized the script so that these things may be easily changed without tooling around with any particular build system.
+This is intended for linux, and only linux.  $1 is used so at the command line, you can specify '-static' but that's still buggy.
+This script generally produces an executable that's less than 1/3rd the size of the product of the original Makefile.
+
+
+CHANGES:
+* done away with a ton of code, specifically anything that's meant for Win32 or OSX.
+* removed /include path, moved version.h and stream_version.h to /common
+* removed debugging options, switched -O for -O3, added -march=native and -pipe
+
+Feb, 16th 2018 -
+For years I've been wanting to do this..."this" is a crazy scheme, but I wanted to do it all the same.  Back when I started mapping in 2002, we had Windows XP, 
+Pentium 3s, and all the free time in the universe.  While free time was a thing, it drove me crazy waiting so long for results to come back from Q3Map2.
+I wanted to know how it could be made faster...where the biggest, slowest gear in the machine was so I could improve it somehow.  Buying new computers through the 
+years was interesting, poking and proding to see which attributes Q3Map2 seemed to soak up the most (a bump in cache sizes above 128K seemed to help a LOT) but
+I didn't want to just throw money at the problem, I knew there had to be something else to be done.  Over the years, life changed, jobs changed, but my interests 
+stayed the same.  Every time I'd learn something new, I'd find a way to link it back to compiling maps faster.  Several breakthroughs were achieved, 
+between multi-threading, the switch from Windows to Linux, flopping from Intel...to AMD...to Intel...and now AMD ..again (while keeping a curious eye on PowerPC).
+I've finally worked myself into a spot where I'm recompiling my own kernels several times a month, practically building my own distribution and now, finally 
+starting to rewrite parts of Q3Map.
+
+For simplicity's sake (the irony is not lost on me), I wanted to isolate the Q3Map2 source code from Radiant.  I wanted to see exactly how little code was used 
+to build it.  For troubleshooting purposes, I wanted to have the smallest possible code base to make it as manageable as possible.  I've done a lot of butchering 
+to some folk's good old fashioned hard work.  I'm hoping to make sure they're consistently credited, as with virtually any developer, we stand on the shoulders of 
+giants.  The butchering will only continue, though, as I keep moving ahead on ripping out non-linux code - That's the other thing, as a kid, I remember being 
+infuriated when some things were only released for linux, not having a way to reach the next cool thing was continuously frusturating.  Linux in 2002 was /very/ 
+out of my reach, and was no where near as prolific in its support of hardware, features and convenience (oh god the convenience) as it is today.  We can do things 
+now we flat out couldn't do 16 years ago, I can do things now I flat out couldn't do 16 years ago.  My plan for this is to distribute source and hopefully a 
+statically linked X86_64 binary but to also have it readily implimented in another project of mine which will be a very thin linux distro on which people can build 
+and run high performance applications.  It'd be a bootable environment in RAM for -just- your application, in this case (and for demonstration purposes) Q3Map4.
+
+For now, I want to strip as much out of the codebase as possible and really fine-tune as much as I possibly can.
+
+You may be asking "Why?  It's 2018, go use Unity or Unreal Engine"  Those are amazing pillars of progress in game development, and should be used.  What I've done 
+here, and will continue to do, is engage in the constant refinement of something I've never given up on.  I've come too far to give up, and...there's nothing in me 
+that wants to stop.  It's been nearly 2 decades of "What if I do this?" and I've seen so....so many things.  Now I've reached a point where things I'm working 
+on could improve the functionality of clusters, or help researchers build faster code.  To my continued delight, those lessons-learned almost always help me ramp 
+up Quake in some way or another.  I don't know when I'll be done, but it won't be any time soon.
+
+See you in 2030 with Q3Map-Quantum. :p
+
+-VolumetricSteve

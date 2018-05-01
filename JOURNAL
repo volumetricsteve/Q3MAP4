@@ -1,0 +1,135 @@
+--- JOURNAL ---
+I wanted to keep a running tab of what I was doing and why I'm doing it.  
+I figure/hope that the way that I whittle down this application and 
+attempt to optimize it may be of some use to someone else, or maybe make
+for an interesting read.  Since about 2001 I've wanted to be able to compile
+quake 3 maps faster, and being in highschool, then college, work, marriage, 
+divorce, more work...progress in the first 14 years or so was fairly stagnant.
+Then my career shifted.  I got a job working with linux and development
+constantly.  Apparently, the best way to learn is to be constantly in over
+your head.  However, I've picked up and run with more in the past few years
+than I had at any other time.  Sometime around 2016 I had managed to compile
+q3map2 on a Cray XC-40 (it ran on one node but with 32 cores)...I kept
+meeting other crazy educational milestones.  I built it with Cray's compilers,
+then Intel's compilers and worked my way back to gcc.  I messed around with
+libraries, linking flags, compiler flags - I was never really given a formal
+education on this stuff...it seemed like whereever I went I was just expected
+to know.  Anyway, I've made sure that every time I pick something new up, I
+check to see if it can be applied to my goal of accelerating q3map2.
+
+I've come a long way.
+
+Predominantly, I use a linux distro named Crux that's deeply minimalist.  It's
+one of these "compile everything from source" distros, in which early on, 
+headaches are frequent, but there are several unique payoffs I won't get into
+here.  The point is, where I wasn't able to refine q3map2 itself (because
+I didn't really know C or C++ well enough to do anything remotely that 
+elaborate)  I focused my energies on other places, like the OS.  I found
+that simply switching to linux (from windows xp) cut my compile times in half.  
+I found this very interesting, and wondered what else I could rip out of 
+linux to make it even faster.  To get there, I've gone into compiling custom
+kernels, stripping things out whereever I can, recompiling things like 
+bin utils and core utils with optimizations (which is supposedly frowned
+upon, but it works fine for me)  and after all of my further exploration, 
+shaved another substantial chunk of time off my compiles.  
+
+My efforts on stripping down linux seem to help linux application performance
+so much, I'm spinning that off as a seperate project which will hopefully be
+used for things additional to quake 3 map compilation.
+
+As I have sheered as much meat from the bones of linux as I think I can, I've 
+finally returned my gaze to the q3map2 source code.  I'm still no expert,
+but I've pretty conclusively shown that stripping out non-critical parts out
+of things seem to make them work much faster, so I intend to continue that
+trend.  
+
+Feb 15th, 2018
+
+I grabbed output from NetRadiant's make binaries-q3map2 (or something like
+that ) and built my own script that -just- builds q3map2.  The NetRadiant 
+Makefile was sort of a mess, and never seemed to actually build q3map2, it 
+must have called something else that did.  I wanted something simpler, so I
+made it.  With my build script it can be plainly seen what's being compiled,
+with what flags, libraries, options, and even the -D options that populate
+the radiant strings baked into the final executable.  
+
+Feb 16th-27th, 2018
+
+I've set my sights on removing the part of q3map2 that communicated to what
+appeared (I guess) to the NetRadiant windowing system.  It seems there's 
+some integration between the actual q3map2 binary and how it works 
+differently if it's run from within NetRadiant.  I assume it has something
+to do with how windowing is handled within NetRadiant, but because I
+basically want to treat q3map2 like a back-end or system service, as long
+as it prints to STDOUT, that's good enough for me.  A lot of the code that
+appears to facilitate this integration is XML.  I can't see too many other 
+reasons why a program like this would need XML, so I'm trying to rip that 
+out.  I've also written several scripts that search inside each source tree
+for the presence of a given string, so looking for where a function is used,
+or defined, becomes much much much easier.  
+
+I had also spent a lot of time just restructuring the code of q3map2.  Some
+are sort of 'happy to glad' changes that aren't much more than me renaming 
+things.  Some I've gone in, modified some code, removed segments, applied
+a really old patch to light.c.  I've rebranded to q3map4, because I plan on
+eventually integrating the OpenCL work done in q3map3.  I'm in the process
+of making monumental changes to the code, but it's a steep climb because
+I'm also learning as I go.
+
+As of now, I've branched my own glob of code to 
+q3map4, q3map4-noxml and q3map4-noglib
+
+I also intend on removing glib as a dependency, which is going to be a mess.
+According to some anti-glib pro-bsd folks, BSD's libc offers far better code
+and functions in a similar capacity to glib...which is odd because i'd think
+they must mean glibc, not glib, but they sounded certain.
+
+Either way, getting glib out also removes the need for PCRE, so that's two
+down.
+
+I have the xml removal project isolated from the glib removal project just
+so I can rip and tear without causing issues to the rest of the code.
+
+It seems like xml should be a bit easier to deal with than glib, too.
+
+Feb 27th, 2018
+
+Removing glib is a pain, the way the code is written, you can't tell at 
+a glance what function calls are glib and which ones aren't.  I tried 
+commenting glib.h out of vfs.h and a lot of errors came up, they seem to 
+center around something called GSstring (I think) and some other thing 
+simply called 'data'.  It looks like there's some need being met by having
+some listing function and then pulling data out of that list, but I can't
+tell yet what it's really in aide of.  
+
+Taking a step back, I wondered 1. How different is the original Q3Map 
+source code & 2. Maybe because the code is ancient now, it was written not
+to require so many things?
+
+I set to work on standing up the Q3Map source side by side with Q3map4.
+
+The hope is that I can get it to compile and learn more about what purely
+'q3map' is meant to do.  So far, it's so old, the makefile it comes with
+is old enough to be a 'makefile' as opposed to a 'Makefile'.  The makefile 
+was also intended for use with Irix, so I had to rip a lot out and hope
+for the best.  There were some very strange optimization flags being passed.
+It's all before my time.  However, I was able to get quite a few of the Q3map
+files to compile - I'm doing something right.  The trouble now is, there's a 
+data type called 'ATOM' that is undefined.  I assume this has something
+to do with something I saw in the makefile where "-Xcpluscomm" was being
+specified.  Curiously, the internet doesn't seem to know about a -X flag for
+gcc, but it does know plenty about a -x flag, which specifies a different
+lanuage.  From this I have to guess 'cpluscomm' was some kind of dialect or 
+language-level rewrite for C++ and in there was defined 'ATOM'.  The 
+internet doesn't seem to know anything about that either.
+
+It doesn't appear to be defined anywhere in the original quake3 source tree.
+I have to assume it was provided by the IDE they used to write these tools
+originally.  Maybe there's a "requirement's" list or something...I could
+check ebay and see if maybe I could buy the thing and just see how much of the
+code I could actually get to work.  Lots of long shots.
+
+The other route is to look at the code and try to guess what 'ATOM' might be.
+
+The good news is the HUNT tool is working for all of the q3map code-bases...
+It really is remarkably helpful.
